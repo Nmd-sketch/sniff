@@ -1,0 +1,127 @@
+cmake_minimum_required(VERSION 3.20)
+project(sniff VERSION 0.1.0 LANGUAGES CXX)
+
+# --- Options ---
+option(SNIFF_BUILD_CLI "Build the sniff command-line executable" ON)
+option(SNIFF_BUILD_PYTHON "Build the Python bindings (requires pybind11)" ON)
+option(SNIFF_BUILD_TESTS "Build the test suite (requires Catch2)" ON)
+
+# --- C++ standard ---
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# --- Dependencies ---
+# None for now
+
+# --- Core library ---
+# We collect all the source files but exclude main.cpp
+file(GLOB_RECURSE SNIFF_SOURCES 
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
+list(FILTER SNIFF_SOURCES EXCLUDE REGEX "src/main.cpp$")
+
+add_library(sniff_core STATIC ${SNIFF_SOURCES})
+
+target_include_directories(sniff_core PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+# --- JSON library ---
+include (FetchContent)
+FetchContent_Declare(
+    json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG        v3.12.0
+)
+FetchContent_MakeAvailable(json)
+
+# --- CLI executable ---
+if (SNIFF_BUILD_CLI)
+    add_executable(sniff_cli src/main.cpp)
+    target_link_libraries(sniff_cli PRIVATE sniff_core nlohmann_json::nlohmann_json)
+
+    # Here the output binary is renamed to just sniff
+    set_target_properties(sniff_cli PROPERTIES OUTPUT_NAME "sniff")
+endif()
+
+# --- Python bindings ---
+if (SNIFF_BUILD_PYTHON)
+    # We find python first
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+    
+    # Then we download pybind11 to avoid installing it manually
+    include(FetchContent)
+    FetchContent_Declare(
+        pybind11
+        GIT_REPOSITORY https://github.com/pybind/pybind11.git
+        GIT_TAG        v3.0.4
+    )
+    FetchContent_MakeAvailable(pybind11)
+
+    # Now we create the python module
+    pybind11_add_module(_sniff_python python/sniff/bindings.cpp)
+    target_link_libraries(_sniff_python PRIVATE sniff_core)
+
+    if (MINGW)
+        target_link_options(_sniff_python PRIVATE "-static-libgcc" "-static-libstdc++"
+        "-Wl,-Bstatic,--whole-archive" "-lwinpthread" "-Wl,--no-whole-archive,-Bdynamic")
+    endif()
+
+    # We set the output name to match the folder name for import sniff
+    set_target_properties(_sniff_python PROPERTIES OUTPUT_NAME "sniff")
+
+    set_target_properties(_sniff_python PROPERTIES
+	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/python/sniff"
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/python/sniff"
+        PREFIX ""
+        SUFFIX ".pyd"
+    )
+
+endif()
+
+# --- Sniff test suite ---
+if (SNIFF_BUILD_TESTS)
+    enable_testing()
+    
+    include (FetchContent)
+    FetchContent_Declare(
+        Catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG        v3.14.0
+    )
+
+    # Prevent Catch2 from overriding the compiler settings
+    set(CATCH_INSTALL_DOCS OFF CACHE INTERNAL "")
+    set(CATCH_INSTALL_EXTRAS OFF CACHE INTERNAL "")
+    FetchContent_MakeAvailable(Catch2)
+
+
+    # We create the test executable
+    add_executable(_sniff_tests tests/test_main.cpp)
+
+    # Now we link the core and Catch2
+    target_link_libraries(_sniff_tests PRIVATE
+        sniff_core
+        Catch2::Catch2WithMain
+    )
+
+    # Now we automatically find all TEST_CASE() macros
+    # and register them as individual tests
+    include(CTest)
+    include(Catch)
+    catch_discover_tests(_sniff_tests)
+endif()
+
+
+
+
+# --- Status message ---
+message(STATUS "----------------------------------------")
+message(STATUS "Project:   ${PROJECT_NAME} v${PROJECT_VERSION}")
+message(STATUS "Build CLI:  ${SNIFF_BUILD_CLI}")
+message(STATUS "Build Py:   ${SNIFF_BUILD_PYTHON}")
+message(STATUS "Build Tests: ${SNIFF_BUILD_TESTS}")
+message(STATUS "----------------------------------------")
+
+

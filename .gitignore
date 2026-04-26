@@ -1,0 +1,128 @@
+# ==========================================
+# Build Directories
+# ==========================================
+# The default folder name used by most CMake users
+build/
+# Alternative names CMake sometimes generates
+cmake-build-*/
+out/
+install/
+
+# CMake specific generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+CTestTestfile.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
+CTestTestfile.cmake
+*.cmake.in
+
+# ==========================================
+# Dependencies (Fetched by CMake)
+# ==========================================
+# We download these via FetchContent, they shouldn't be in git
+_deps/
+
+# ==========================================
+# Compiled Binaries & Objects
+# ==========================================
+# Windows
+*.exe
+*.dll
+*.lib
+*.exp
+*.pdb
+*.ilk
+
+# Linux/macOS
+*.so
+*.o
+*.obj
+*.out
+*.app
+
+# Python compiled extensions (Your .pyd goes here)
+*.pyd
+*.pyc
+*.pyo
+
+# ==========================================
+# Python Environments
+# ==========================================
+# Standard virtual environment folders
+venv/
+.venv/
+env/
+
+# Conda environments
+env/
+miniconda3/
+
+# Python bytecode cache
+__pycache__/
+*.pyc
+
+# ==========================================
+# IDEs and Editors
+# ==========================================
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.sln.docstates
+*.userosscache
+
+# Visual Studio Code
+.vscode/
+
+# CLion
+.idea/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# VS Code
+*.code-workspace
+
+# Clangd
+./cache
+
+# ==========================================
+# Operating System Junk
+# ==========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+Desktop.ini
+ $RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden
+.directory
+
+# ==========================================
+# Misc / Security
+# ==========================================
+# Environment variables (Never commit secrets!)
+.env
+.env.*
+!.env.example
+
+# Compiled python binaries if any leak in
+dist/
+*.egg-info/
+*.egg
+*.whl
+
+# Logs
+*.log
