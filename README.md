@@ -1,7 +1,6 @@
 <div align="center">
-  <img src="https://via.placeholder.com/150" alt="sniff logo" width="150"/>
 
-  # sniff
+  <h1>sniff</h1>
 
   **A blazing fast, safe, and scriptable file finder.**
 
@@ -26,6 +25,7 @@ Standard `find` is powerful but clunky. It requires ancient syntax and spews per
 
 Tested scanning **70,000+ files** in a deep dependency tree on Windows 11 (MinGW GCC 15, Release `-O3`).
 
+# v0.1.0
 | Tool | Command | Mean Time | Pure CPU Time (`User`) | OS Overhead (`System`) |
 | :--- | :--- | :--- | :--- | :--- |
 | **`sniff` (C++20)** | `sniff -e cpp _deps` | 193.1 ms | **17.6 ms** | 173.5 ms |
@@ -34,6 +34,14 @@ Tested scanning **70,000+ files** in a deep dependency tree on Windows 11 (MinGW
 
 *Note: `sniff`'s raw computation engine is nearly **3x faster** than `fd` at pure CPU math. The current total time is dominated by `std::filesystem` OS wrapper overhead, which will be optimized in v0.2 using bulk directory reading APIs.*
 
+# v0.2.0 (Windows)
+| Tool | Command | Mean Time | Pure CPU Time (`User`) | OS Overhead (`System`) |
+| :--- | :--- | :--- | :--- | :--- |
+| **`sniff` (C++20)** | `sniff -e cpp _deps` | 193.1 ms | **6.4 ms** | 34.1 ms |
+| `fd` (Rust) | `fd "\.cpp$" _deps` | **60.8 ms** | 52.3 ms | 73.1 ms |
+| POSIX `find` | `find _deps -name "*.cpp"` | ~260.0 ms | - | - |
+
+*Note: The POSIX implementation is still a work in progress.*
 ---
 
 ## Installation (CLI)
@@ -41,7 +49,7 @@ Tested scanning **70,000+ files** in a deep dependency tree on Windows 11 (MinGW
 **Windows (MSYS2/MinGW):**
 
 ```bash
-git clone https://github.com/[YOUR_USERNAME]/sniff.git
+git clone https://github.com/Nmd-sketch/sniff.git
 cd sniff
 mkdir build && cd build
 cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release

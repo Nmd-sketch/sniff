@@ -11,15 +11,19 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# --- Dependencies ---
-# None for now
-
 # --- Core library ---
 # We collect all the source files but exclude main.cpp
-file(GLOB_RECURSE SNIFF_SOURCES 
+file(GLOB_RECURSE SNIFF_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
 list(FILTER SNIFF_SOURCES EXCLUDE REGEX "src/main.cpp$")
+
+if (WIN32)
+  list(FILTER SNIFF_SOURCES EXCLUDE REGEX "src/scan_posix\\.cpp$")
+else()
+  list(FILTER SNIFF_SOURCES EXCLUDE REGEX "src/scan_win\\.cpp$")
+endif()
+
 
 add_library(sniff_core STATIC ${SNIFF_SOURCES})
 
@@ -49,7 +53,7 @@ endif()
 if (SNIFF_BUILD_PYTHON)
     # We find python first
     find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
-    
+
     # Then we download pybind11 to avoid installing it manually
     include(FetchContent)
     FetchContent_Declare(
@@ -72,18 +76,20 @@ if (SNIFF_BUILD_PYTHON)
     set_target_properties(_sniff_python PROPERTIES OUTPUT_NAME "sniff")
 
     set_target_properties(_sniff_python PROPERTIES
-	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/python/sniff"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/python/sniff"
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/python/sniff"
         PREFIX ""
-        SUFFIX ".pyd"
     )
+    if(WIN32)
+        set_target_properties(_sniff_python PROPERTIES SUFFIX ".pyd")
+    endif()
 
 endif()
 
 # --- Sniff test suite ---
 if (SNIFF_BUILD_TESTS)
     enable_testing()
-    
+
     include (FetchContent)
     FetchContent_Declare(
         Catch2
@@ -98,7 +104,11 @@ if (SNIFF_BUILD_TESTS)
 
 
     # We create the test executable
-    add_executable(_sniff_tests tests/test_main.cpp)
+    if (WIN32)
+      add_executable(_sniff_tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_main.cpp")
+    else()
+      add_executable(_sniff_tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_posix_main.cpp")
+    endif()
 
     # Now we link the core and Catch2
     target_link_libraries(_sniff_tests PRIVATE
@@ -123,5 +133,3 @@ message(STATUS "Build CLI:  ${SNIFF_BUILD_CLI}")
 message(STATUS "Build Py:   ${SNIFF_BUILD_PYTHON}")
 message(STATUS "Build Tests: ${SNIFF_BUILD_TESTS}")
 message(STATUS "----------------------------------------")
-
-
