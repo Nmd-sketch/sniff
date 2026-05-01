@@ -23,26 +23,21 @@ Standard `find` is powerful but clunky. It requires ancient syntax and spews per
 
 ## Benchmarks
 
-Tested scanning **70,000+ files** in a deep dependency tree on Windows 11 (MinGW GCC 15, Release `-O3`).
+Tested scanning **70,000+ files** in a deep dependency tree on Windows 11 and inside WSL2 for POSIX version (MinGW GCC 15, Release `-O3`).
 
-# v0.1.0
+# v0.3.0 (Windows)
 | Tool | Command | Mean Time | Pure CPU Time (`User`) | OS Overhead (`System`) |
 | :--- | :--- | :--- | :--- | :--- |
-| **`sniff` (C++20)** | `sniff -e cpp _deps` | 193.1 ms | **17.6 ms** | 173.5 ms |
-| `fd` (Rust) | `fd "\.cpp$" _deps` | **60.8 ms** | 49.4 ms | 84.7 ms |
-| POSIX `find` | `find _deps -name "*.cpp"` | ~260.0 ms | - | - |
+| **`sniff` (C++20)** | `sniff -e cpp _deps` | **33.9 ms** | **6.4 ms** | **34.1 ms** |
+| `fd` (Rust) | `fd "\.cpp$" _deps` | 61.6 ms | 59.1 ms | 65.3 ms |
 
-*Note: `sniff`'s raw computation engine is nearly **3x faster** than `fd` at pure CPU math. The current total time is dominated by `std::filesystem` OS wrapper overhead, which will be optimized in v0.2 using bulk directory reading APIs.*
-
-# v0.2.0 (Windows)
+# v0.3.0 (POSIX)
 | Tool | Command | Mean Time | Pure CPU Time (`User`) | OS Overhead (`System`) |
 | :--- | :--- | :--- | :--- | :--- |
-| **`sniff` (C++20)** | `sniff -e cpp _deps` | 193.1 ms | **6.4 ms** | 34.1 ms |
-| `fd` (Rust) | `fd "\.cpp$" _deps` | **60.8 ms** | 52.3 ms | 73.1 ms |
-| POSIX `find` | `find _deps -name "*.cpp"` | ~260.0 ms | - | - |
-
-*Note: The POSIX implementation is still a work in progress.*
+| **`sniff` (C++20)** | `sniff -a cpp` | 6.4 ms | **1.5 ms** | **5.0 ms** |
+| `fd` (Rust) | `find` | 4.8ms | 1.4 ms | 3.5 ms |
 ---
+
 
 ## Installation (CLI)
 
@@ -101,4 +96,3 @@ Parameters: `root_path` , `extension` , `max_depth` , `min_size` , `max_size` , 
 
 ## License
 This project is licensed under the Apache License, Version 2.0. See the LICENSE file for details.
-

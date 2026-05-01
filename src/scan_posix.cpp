@@ -3,10 +3,12 @@
 #include <climits>
 #include <cstdlib>
 #include <dirent.h>
-#include <queue>
 #include <string>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
+#include <fcntl.h>
+#include <cstring>
 
 // ------------------------------------------------------------------
 // Helpers
@@ -17,49 +19,122 @@ static bool IsDotDir(const char *name) {
          (name[1] == '\0' || (name[1] == '.' && name[2] == '\0'));
 }
 
-static bool IsHidden(const char *name) {
-  return name[0] == '.' && !IsDotDir(name);
-}
-
-static bool MatchExtension(std::string_view filename, std::string_view ext) {
-  if (ext.empty() || ext == "_all_ext")
-    return true;
-  if (ext.front() == '.')
-    ext.remove_prefix(1);
-
-  auto pos = filename.rfind('.');
-  if (pos == std::string_view::npos)
-    return false;
-
-  std::string_view file_ext = filename.substr(pos + 1);
-  if (file_ext.size() != ext.size())
-    return false;
-
-  for (size_t i = 0; i < file_ext.size(); ++i)
-    if (std::tolower(static_cast<unsigned char>(file_ext[i])) !=
-        std::tolower(static_cast<unsigned char>(ext[i])))
-      return false;
-  return true;
-}
-
-static std::string PathJoin(const std::string &a, const char *b) {
-  if (a.empty())
-    return std::string(b);
-  if (a.back() == '/')
-    return a + b;
-  return a + "/" + b;
-}
-
-// Pure string normalization. No filesystem hits.
 static std::string NormalizePath(std::string_view path) {
-  std::string p(path);
-  if (!p.empty() && p[0] == '/')
-    return p;
-
+  if (path.empty())
+    return "/";
+  if (path[0] == '/')
+    return std::string(path);
   char cwd[PATH_MAX];
   if (!getcwd(cwd, sizeof(cwd)))
-    return p;
-  return std::string(cwd) + "/" + p;
+    return std::string(path);
+  return std::string(cwd) + '/' + std::string(path);
+}
+
+// ------------------------------------------------------------------
+// Recursive scanner - path modified in-place, restored on return
+// ------------------------------------------------------------------
+
+static void scan_recursive(
+    std::string &path,
+    int depth,
+    const std::string &ext_lower,
+    bool match_all_ext,
+    int max_depth,
+    bool ignore_hidden,
+    std::uintmax_t min_size,
+    std::uintmax_t max_size,
+    std::vector<sniff::Entry> &results) {
+
+  DIR *const d = opendir(path.c_str());
+  if (!d)
+    return;
+
+  const int dir_fd = dirfd(d);
+  const bool needs_slash = path.back() != '/';
+
+  struct dirent *ent;
+  while ((ent = readdir(d)) != nullptr) {
+    const char *name = ent->d_name;
+
+    if (IsDotDir(name))
+      continue;
+    if (ignore_hidden && name[0] == '.')
+      continue;
+
+    const unsigned char d_type = ent->d_type;
+
+    // --- Directory: recurse immediately, modify path in-place ---
+    if (d_type == DT_DIR) {
+      if (max_depth >= 0 && depth >= max_depth)
+        continue;
+      const size_t saved = path.size();
+      if (needs_slash)
+        path += '/';
+      path += name;
+      scan_recursive(path, depth + 1, ext_lower, match_all_ext,
+                     max_depth, ignore_hidden, min_size, max_size, results);
+      path.resize(saved);
+      continue;
+    }
+
+    // --- Skip non-regular without stat ---
+    if (d_type != DT_REG && d_type != DT_UNKNOWN)
+      continue;
+
+    // --- Stat via dirfd (no path construction needed) ---
+    struct stat fst;
+    if (fstatat(dir_fd, name, &fst, AT_SYMLINK_NOFOLLOW) != 0)
+      continue;
+
+    // --- Handle DT_UNKNOWN (NFS, etc.) ---
+    if (d_type == DT_UNKNOWN) {
+      if (S_ISDIR(fst.st_mode)) {
+        if (max_depth >= 0 && depth >= max_depth)
+          continue;
+        const size_t saved = path.size();
+        if (needs_slash)
+          path += '/';
+        path += name;
+        scan_recursive(path, depth + 1, ext_lower, match_all_ext,
+                       max_depth, ignore_hidden, min_size, max_size, results);
+        path.resize(saved);
+        continue;
+      }
+      if (!S_ISREG(fst.st_mode))
+        continue;
+    }
+
+    // --- Extension filter ---
+    if (!match_all_ext) {
+      const char *dot = strrchr(name, '.');
+      if (!dot)
+        continue;
+      const char *fext = dot + 1;
+      const size_t elen = ext_lower.size();
+      size_t i = 0;
+      for (; i < elen && fext[i]; ++i) {
+        if (std::tolower(static_cast<unsigned char>(fext[i])) !=
+            static_cast<unsigned char>(ext_lower[i]))
+          break;
+      }
+      if (i != elen || fext[i] != '\0')
+        continue;
+    }
+
+    // --- Size filter ---
+    const std::uintmax_t sz = static_cast<std::uintmax_t>(fst.st_size);
+    if (sz < min_size || sz > max_size)
+      continue;
+
+    // --- Only now build the full path (file passed ALL filters) ---
+    std::string full = path;
+    if (needs_slash)
+      full += '/';
+    full += name;
+    results.push_back({std::move(full), sz, false});
+  }
+
+  closedir(d);
 }
 
 // ------------------------------------------------------------------
@@ -72,61 +147,29 @@ std::vector<sniff::Entry> sniff::raw_scan(std::string_view root_path,
                                           std::uintmax_t min_size,
                                           std::uintmax_t max_size) {
   std::vector<Entry> results;
-
   std::string abs_root = NormalizePath(root_path);
 
-  struct stat st;
-  if (lstat(abs_root.c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
+  struct stat root_st;
+  if (lstat(abs_root.c_str(), &root_st) != 0 || !S_ISDIR(root_st.st_mode))
     return results;
 
-  std::queue<std::pair<std::string, int>> q;
-  q.emplace(abs_root, 0);
+  results.reserve(4096);
 
-  while (!q.empty()) {
-    auto [dir_path, depth] = q.front();
-    q.pop();
-
-    DIR *d = opendir(dir_path.c_str());
-    if (!d)
-      continue;
-
-    struct dirent *ent;
-    while ((ent = readdir(d)) != nullptr) {
-      if (IsDotDir(ent->d_name))
+  // Pre-compute lowered extension once
+  std::string ext_lower;
+  bool match_all_ext = user_extension.empty() || user_extension == "_all_ext";
+  if (!match_all_ext) {
+    for (char c : user_extension) {
+      if (c == '.' && ext_lower.empty())
         continue;
-      if (ignore_hidden && IsHidden(ent->d_name))
-        continue;
-
-      std::string full = PathJoin(dir_path, ent->d_name);
-
-      // Portable: we MUST stat to know type and size.
-      // lstat() does not follow symlinks, so we won't recurse into symlinked dirs.
-      struct stat fst;
-      if (lstat(full.c_str(), &fst) != 0)
-        continue;
-
-      if (S_ISDIR(fst.st_mode)) {
-        if (max_depth < 0 || depth < max_depth) {
-          q.emplace(full, depth + 1);
-        }
-        continue;
-      }
-
-      if (!S_ISREG(fst.st_mode))
-        continue; // skip symlinks, pipes, devices, etc.
-
-      // Cheap filter: extension check before size (string ops vs 64-bit compare)
-      if (!MatchExtension(ent->d_name, user_extension))
-        continue;
-
-      std::uintmax_t file_size = static_cast<std::uintmax_t>(fst.st_size);
-      if (file_size < min_size || file_size > max_size)
-        continue;
-
-      results.push_back({full, file_size, false});
+      ext_lower.push_back(std::tolower(static_cast<unsigned char>(c)));
     }
-    closedir(d);
+    if (ext_lower.empty())
+      match_all_ext = true;
   }
+
+  scan_recursive(abs_root, 0, ext_lower, match_all_ext,
+                 max_depth, ignore_hidden, min_size, max_size, results);
 
   return results;
 }
