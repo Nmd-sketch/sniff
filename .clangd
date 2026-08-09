@@ -1,0 +1,38 @@
+CompileFlags:
+  Add:
+    - -std=c++20
+    - -Wall
+    - -Wextra
+    - -Wpedantic
+
+Diagnostics:
+  UnusedIncludes: Strict
+
+InlayHints:
+  Enabled: true
+  DeducedTypes: true
+  ParameterNames: true
+  Designators: true
+
+ClangTidy:
+  Add:
+    - clang-analyzer-*
+    - modernize-*
+    - performance-*
+    - readability-*
+    - bugprone-*
+    - cppcoreguidelines-*
+  Remove:
+    - cppcoreguidelines-avoid-magic-numbers
+    - readability-magic-numbers
+    - readability-uppercase-literal-suffix
+    - modernize-use-trailing-return-type
+  CheckOptions:
+    readability-identifier-naming.VariableCase: CamelCase
+    readability-identifier-naming.FunctionCase: camelBack
+    readability-identifier-naming.ClassCase: PascalCase
+    readability-identifier-naming.StructCase: PascalCase
+    readability-identifier-naming.EnumCase: PascalCase
+    readability-identifier-naming.ConstantCase: UPPER_CASE
+    readability-identifier-naming.MemberCase: CamelCase
+    readability-identifier-naming.ParameterCase: CamelCase
