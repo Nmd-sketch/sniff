@@ -1,8 +1,14 @@
+#include <chrono>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "interface/cli/CommandParser.hpp"
+#include "interface/formatter/JsonFormatter.hpp"
+#include "interface/formatter/TableFormatter.hpp"
+#include "interface/formatter/TreeFormatter.hpp"
+#include "domain/model/DomainEntry.hpp"
 
 namespace {
 
@@ -78,6 +84,35 @@ void printSpec(const FilterSpec& spec) {
     if (spec.created_before) std::cout << "created before:   " << *spec.created_before << '\n';
 }
 
+std::vector<std::unique_ptr<domain::IEntry>> makeDemoEntries() {
+    using domain::EntryType;
+    const auto now = std::chrono::system_clock::now();
+    const auto yesterday = now - std::chrono::hours(24);
+
+    std::vector<std::unique_ptr<domain::IEntry>> entries;
+    entries.push_back(std::make_unique<domain::DomainEntry>(
+        EntryType::DIRECTORY, false, "src", "src", 0, now, yesterday));
+    entries.push_back(std::make_unique<domain::DomainEntry>(
+        EntryType::FILE, false, "main.cpp", "src/main.cpp", 2048, now, yesterday));
+    entries.push_back(std::make_unique<domain::DomainEntry>(
+        EntryType::FILE, false, "utils.hpp", "src/utils.hpp", 1536, now, yesterday));
+    entries.push_back(std::make_unique<domain::DomainEntry>(
+        EntryType::SYMLINK, true, "latest", "src/latest", 0, now, yesterday));
+    return entries;
+}
+
+std::unique_ptr<Formatter> makeFormatter(FormatType type) {
+    switch (type) {
+        case FormatType::JSON:
+            return std::make_unique<JsonFormatter>();
+        case FormatType::TREE:
+            return std::make_unique<TreeFormatter>();
+        case FormatType::TABLE:
+            return std::make_unique<TableFormatter>();
+    }
+    return std::make_unique<TableFormatter>();
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -101,6 +136,11 @@ int main(int argc, char** argv) {
     std::cout << "format:      " << toText(parser.getFormatType()) << '\n';
     for (const auto& spec : parser.getFilterSpecs()) {
         printSpec(spec);
+    }
+
+    if (commands.empty()) {
+        std::unique_ptr<Formatter> formatter = makeFormatter(parser.getFormatType());
+        std::cout << formatter->formatEntries(makeDemoEntries());
     }
     return 0;
 }

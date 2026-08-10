@@ -2,6 +2,7 @@ add_library(interface_layer STATIC
     cli/CliController.cpp
     cli/CommandParser.cpp
 
+    formatter/Formatting.cpp
     formatter/JsonFormatter.cpp
     formatter/TableFormatter.cpp
     formatter/TreeFormatter.cpp

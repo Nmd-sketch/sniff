@@ -12,6 +12,8 @@ FetchContent_MakeAvailable(googletest)
 add_executable(sniff_tests
     SmokeTest.cpp
     ParserTest.cpp
+    EntryModelTest.cpp
+    FormatterTest.cpp
 )
 
 target_link_libraries(sniff_tests PRIVATE

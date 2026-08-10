@@ -1,6 +1,7 @@
 add_library(domain_layer STATIC
     model/CaseMode.hpp
     model/DomainEntry.hpp
+    model/EntryType.hpp
     model/FileType.hpp
     model/FilterSpec.hpp
     model/IEntry.hpp
