@@ -91,13 +91,13 @@ std::vector<std::unique_ptr<domain::IEntry>> makeDemoEntries() {
 
     std::vector<std::unique_ptr<domain::IEntry>> entries;
     entries.push_back(std::make_unique<domain::DomainEntry>(
-        EntryType::DIRECTORY, false, "src", "src", 0, now, yesterday));
+        EntryType::DIRECTORY, false, false, "src", "src", 0, now, yesterday));
     entries.push_back(std::make_unique<domain::DomainEntry>(
-        EntryType::FILE, false, "main.cpp", "src/main.cpp", 2048, now, yesterday));
+        EntryType::FILE, false, false, "main.cpp", "src/main.cpp", 2048, now, yesterday));
     entries.push_back(std::make_unique<domain::DomainEntry>(
-        EntryType::FILE, false, "utils.hpp", "src/utils.hpp", 1536, now, yesterday));
+        EntryType::FILE, false, false, "utils.hpp", "src/utils.hpp", 1536, now, yesterday));
     entries.push_back(std::make_unique<domain::DomainEntry>(
-        EntryType::SYMLINK, true, "latest", "src/latest", 0, now, yesterday));
+        EntryType::SYMLINK, true, false, "latest", "src/latest", 0, now, yesterday));
     return entries;
 }
 

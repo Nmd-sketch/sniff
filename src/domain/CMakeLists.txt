@@ -7,7 +7,6 @@ add_library(domain_layer STATIC
     model/FilterSpec.hpp
     model/IEntry.hpp
     model/MatchMode.hpp
-    model/Path.hpp
 
     ports/IFilter.hpp
     ports/IEntryRepository.hpp
@@ -19,10 +18,12 @@ add_library(domain_layer STATIC
 
     service/filters/DateFilter.cpp
     service/filters/DepthFilter.cpp
+    service/filters/ExcludeFilter.cpp
     service/filters/ExtensionFilter.cpp
     service/filters/HiddenFilter.cpp
     service/filters/NameFilter.cpp
     service/filters/SizeFilter.cpp
+    service/filters/TypeFilter.cpp
 )
 
 target_include_directories(domain_layer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

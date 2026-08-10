@@ -1,5 +1,6 @@
 #include "CliController.hpp"
 
+#include <exception>
 #include <iostream>
 #include <memory>
 
@@ -57,13 +58,20 @@ int CliController::run(const std::vector<std::string>& args) const {
     config.specs = parser.getFilterSpecs();
 
     application::ScanConfig scan;
+    scan.pattern = config.pattern;
     scan.paths = config.paths;
     scan.specs = config.specs;
 
     domain::CancellationToken token;
     application::SignalHandler interrupt(token);
 
-    application::QueryResult result = m_service.search(scan, token);
+    application::QueryResult result;
+    try {
+        result = m_service.search(scan, token);
+    } catch (const std::exception& error) {
+        std::cerr << "sniff: " << error.what() << '\n';
+        return EXIT_ERROR;
+    }
 
     if (result.aborted) {
         std::cerr << "sniff: interrupted\n";

@@ -49,8 +49,9 @@ public:
         result.aborted = aborted;
         for (const auto& entry : entries) {
             result.entries.push_back(std::make_unique<domain::DomainEntry>(
-                entry->getType(), entry->isHidden(), entry->getName(), entry->getPath(),
-                entry->getSizeBytes(), entry->getCreatedAt(), entry->getModifiedAt()));
+                entry->getType(), entry->isHidden(), entry->isExecutable(),
+                entry->getName(), entry->getPath(), entry->getSizeBytes(),
+                entry->getCreatedAt(), entry->getModifiedAt()));
         }
         return result;
     }
@@ -58,7 +59,7 @@ public:
 
 std::unique_ptr<domain::IEntry> makeFileEntry(const std::string& name) {
     return std::make_unique<domain::DomainEntry>(
-        domain::EntryType::FILE, false, name, name, 1024,
+        domain::EntryType::FILE, false, false, name, name, 1024,
         std::chrono::system_clock::from_time_t(0),
         std::chrono::system_clock::from_time_t(0));
 }

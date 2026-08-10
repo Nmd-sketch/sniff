@@ -16,6 +16,11 @@ add_executable(sniff_tests
     FormatterTest.cpp
     CancellationTokenTest.cpp
     CliControllerTest.cpp
+    MatcherTest.cpp
+    FilterTest.cpp
+    FilterFactoryTest.cpp
+    SorterTest.cpp
+    SearchServiceTest.cpp
 )
 
 target_link_libraries(sniff_tests PRIVATE

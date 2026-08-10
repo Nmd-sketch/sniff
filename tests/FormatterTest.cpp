@@ -21,14 +21,16 @@ public:
     FakeEntry(domain::EntryType type, std::string name, std::string path,
               std::uintmax_t size = 0, bool hidden = false,
               std::chrono::system_clock::time_point time =
-                  std::chrono::system_clock::from_time_t(0))
+                  std::chrono::system_clock::from_time_t(0),
+              bool executable = false)
         : m_type(type), m_name(std::move(name)), m_path(std::move(path)), m_size(size),
-          m_hidden(hidden), m_time(time) {}
+          m_hidden(hidden), m_executable(executable), m_time(time) {}
 
     const std::string& getName() const override { return m_name; }
     const std::string& getPath() const override { return m_path; }
     domain::EntryType getType() const override { return m_type; }
     bool isHidden() const override { return m_hidden; }
+    bool isExecutable() const override { return m_executable; }
     std::uintmax_t getSizeBytes() const override { return m_size; }
     const std::chrono::system_clock::time_point& getCreatedAt() const override { return m_time; }
     const std::chrono::system_clock::time_point& getModifiedAt() const override { return m_time; }
@@ -39,6 +41,7 @@ private:
     std::string m_path;
     std::uintmax_t m_size;
     bool m_hidden;
+    bool m_executable;
     std::chrono::system_clock::time_point m_time;
 };
 

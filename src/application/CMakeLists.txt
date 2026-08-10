@@ -11,6 +11,7 @@ add_library(application_layer STATIC
 
     port/ISearchService.hpp
 
+    service/SearchService.cpp
     service/SignalHandler.hpp
     ${PLATFORM_SIGNAL_HANDLER}
 )

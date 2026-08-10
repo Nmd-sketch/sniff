@@ -13,6 +13,7 @@ using ProgressCallback =
     std::function<void(std::uint64_t scanned, const std::string& currentPath)>;
 
 struct ScanConfig {
+    std::string pattern;
     std::vector<std::string> paths;
     std::vector<FilterSpec> specs;
     std::optional<ProgressCallback> on_progress;
