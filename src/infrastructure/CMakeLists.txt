@@ -1,0 +1,3 @@
+add_library(infrastructure_layer INTERFACE)
+
+target_include_directories(infrastructure_layer INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
