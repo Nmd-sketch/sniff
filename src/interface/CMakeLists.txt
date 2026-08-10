@@ -9,3 +9,4 @@ add_library(interface_layer STATIC
 )
 
 target_include_directories(interface_layer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(interface_layer PRIVATE application_layer)

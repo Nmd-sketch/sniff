@@ -1,4 +1,5 @@
 add_library(domain_layer STATIC
+    model/CancellationToken.hpp
     model/CaseMode.hpp
     model/DomainEntry.hpp
     model/EntryType.hpp
@@ -8,14 +9,12 @@ add_library(domain_layer STATIC
     model/MatchMode.hpp
     model/Path.hpp
 
-    ports/IEntryRepository.hpp
     ports/IFilter.hpp
-    ports/ISearchService.hpp
+    ports/IEntryRepository.hpp
 
     service/FilterChain.cpp
     service/FilterFactory.cpp
     service/Matcher.cpp
-    service/SearchService.cpp
     service/Sorter.cpp
 
     service/filters/DateFilter.cpp

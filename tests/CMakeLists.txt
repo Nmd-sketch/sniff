@@ -14,11 +14,14 @@ add_executable(sniff_tests
     ParserTest.cpp
     EntryModelTest.cpp
     FormatterTest.cpp
+    CancellationTokenTest.cpp
+    CliControllerTest.cpp
 )
 
 target_link_libraries(sniff_tests PRIVATE
     GTest::gtest_main
     interface_layer
+    application_layer
 )
 
 include(GoogleTest)
