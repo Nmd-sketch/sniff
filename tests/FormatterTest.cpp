@@ -136,10 +136,10 @@ TEST(TreeFormatter, SingleDirectoryWithNestedChildren) {
 
     const std::string expected =
         "a/\n"
-        "├── d/\n"
-        "│   └── e\n"
-        "├── b\n"
-        "└── c.txt\n";
+        "|-- d/\n"
+        "|   \\-- e\n"
+        "|-- b\n"
+        "\\-- c.txt\n";
 
     EXPECT_EQ(TreeFormatter().formatEntries(entries), expected);
 }
@@ -152,7 +152,7 @@ TEST(TreeFormatter, MultipleRootsRenderIndependently) {
 
     const std::string expected =
         "a/\n"
-        "└── b\n"
+        "\\-- b\n"
         "z.txt\n";
 
     EXPECT_EQ(TreeFormatter().formatEntries(entries), expected);
@@ -167,9 +167,9 @@ TEST(TreeFormatter, ChildrenSortedDirectoriesFirstThenName) {
 
     const std::string expected =
         "a/\n"
-        "├── bdir/\n"
-        "├── zdir/\n"
-        "└── afile\n";
+        "|-- bdir/\n"
+        "|-- zdir/\n"
+        "\\-- afile\n";
 
     EXPECT_EQ(TreeFormatter().formatEntries(entries), expected);
 }
@@ -181,8 +181,8 @@ TEST(TreeFormatter, WindowsSeparatorsNormalized) {
 
     const std::string expected =
         "a/\n"
-        "└── b/\n"
-        "    └── c.txt\n";
+        "\\-- b/\n"
+        "    \\-- c.txt\n";
 
     EXPECT_EQ(TreeFormatter().formatEntries(entries), expected);
 }

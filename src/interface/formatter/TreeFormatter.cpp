@@ -69,11 +69,11 @@ void sortNodes(std::vector<Node>& nodes) {
 }
 
 void renderChild(std::ostream& out, const Node& node, const std::string& prefix, bool isLast) {
-    out << prefix << (isLast ? "└── " : "├── ") << node.name;
+    out << prefix << (isLast ? "\\-- " : "|-- ") << node.name;
     if (node.isDirectory) out << '/';
     out << '\n';
 
-    const std::string childPrefix = prefix + (isLast ? "    " : "│   ");
+    const std::string childPrefix = prefix + (isLast ? "    " : "|   ");
     const std::size_t count = node.children.size();
     for (std::size_t i = 0; i < count; ++i) {
         renderChild(out, node.children[i], childPrefix, i + 1 == count);
