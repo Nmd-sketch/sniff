@@ -1,0 +1,3 @@
+# Placeholder so git keeps the empty third-party/ folder.
+# Vendored/offline dependencies would live here; current deps are fetched
+# via CMake FetchContent into build/_deps/. See docs/design/DECISIONS.md (ADR-017).
