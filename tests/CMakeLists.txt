@@ -24,7 +24,11 @@ add_executable(sniff_tests
 )
 
 if(WIN32)
-    target_sources(sniff_tests PRIVATE ScannerCoreTest.cpp Win32ScannerTest.cpp)
+    target_sources(sniff_tests PRIVATE
+        ScannerCoreTest.cpp
+        Win32ScannerTest.cpp
+        CliControllerEndToEndTest.cpp
+    )
 endif()
 
 target_link_libraries(sniff_tests PRIVATE
