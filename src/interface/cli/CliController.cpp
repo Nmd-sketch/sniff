@@ -16,6 +16,10 @@
 #include "../formatter/TreeFormatter.hpp"
 #include "CommandParser.hpp"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace {
 
 constexpr int EXIT_OK = 0;
@@ -40,6 +44,10 @@ CliController::CliController(application::ISearchService& service)
     : m_service(service) {}
 
 int CliController::run(const std::vector<std::string>& args) const {
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+#endif
+
     CommandParser parser;
     if (!parser.parse(args)) {
         std::cerr << "sniff: " << parser.lastError() << '\n';
