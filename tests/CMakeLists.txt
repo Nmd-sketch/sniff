@@ -23,10 +23,15 @@ add_executable(sniff_tests
     SearchServiceTest.cpp
 )
 
+if(WIN32)
+    target_sources(sniff_tests PRIVATE ScannerCoreTest.cpp Win32ScannerTest.cpp)
+endif()
+
 target_link_libraries(sniff_tests PRIVATE
     GTest::gtest_main
     interface_layer
     application_layer
+    infrastructure_layer
 )
 
 include(GoogleTest)
