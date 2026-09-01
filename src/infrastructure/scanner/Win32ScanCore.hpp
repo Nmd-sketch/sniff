@@ -27,6 +27,12 @@ std::uintmax_t sizeFromWin32(DWORD sizeHigh, DWORD sizeLow);
 std::wstring utf8ToWide(const std::string& text);
 std::string wideToUtf8(const std::wstring& text);
 
+/* Resolve the normalized canonical path of a directory handle, or empty on failure.
+   Unlike a naive two-call GetFinalPathNameByHandleW, a failed second call (which can
+   leave the buffer full of NULs) yields an empty result, and a trailing embedded NUL
+   is trimmed. */
+std::wstring canonicalPathOf(HANDLE handle);
+
 /* Normalize a scan root: backslashes to '/', strip trailing '/', '.' -> "", strip a leading "./". */
 std::string normalizeScanRoot(const std::string& root);
 

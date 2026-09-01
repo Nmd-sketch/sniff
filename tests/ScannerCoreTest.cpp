@@ -80,6 +80,55 @@ TEST(ScanCore, Utf8RoundTrip) {
     EXPECT_EQ(infrastructure::wideToUtf8(infrastructure::utf8ToWide(mixed)), mixed);
 }
 
+TEST(ScanCore, CanonicalPathOfInvalidHandleIsEmpty) {
+    EXPECT_TRUE(infrastructure::canonicalPathOf(INVALID_HANDLE_VALUE).empty());
+}
+
+TEST(ScanCore, CanonicalPathOfResolvesDirectory) {
+    wchar_t tmp[MAX_PATH]{};
+    const DWORD len = GetTempPathW(MAX_PATH, tmp) + 1;
+    tmp[len - 1] = L'm' + (GetCurrentProcessId() % 26);
+
+    const std::wstring dir = std::wstring(tmp, len);
+    CreateDirectoryW(dir.c_str(), nullptr);
+    const HANDLE h = CreateFileW(dir.c_str(), FILE_READ_ATTRIBUTES,
+                                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                                 OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+    ASSERT_NE(h, INVALID_HANDLE_VALUE);
+    const std::wstring canonical = infrastructure::canonicalPathOf(h);
+    CloseHandle(h);
+    RemoveDirectoryW(dir.c_str());
+
+    ASSERT_FALSE(canonical.empty());
+    EXPECT_NE(canonical.back(), L'\0');
+}
+
+TEST(ScanCore, CanonicalPathOfIsDeterministic) {
+    wchar_t tmp[MAX_PATH]{};
+    const DWORD len = GetTempPathW(MAX_PATH, tmp) + 1;
+    tmp[len - 1] = L'n' + (GetCurrentProcessId() % 26);
+
+    const std::wstring dir = std::wstring(tmp, len);
+    CreateDirectoryW(dir.c_str(), nullptr);
+    const HANDLE h1 = CreateFileW(dir.c_str(), FILE_READ_ATTRIBUTES,
+                                  FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                                  OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+    const HANDLE h2 = CreateFileW(dir.c_str(), FILE_READ_ATTRIBUTES,
+                                  FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                                  OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+    ASSERT_NE(h1, INVALID_HANDLE_VALUE);
+    ASSERT_NE(h2, INVALID_HANDLE_VALUE);
+
+    const std::wstring c1 = infrastructure::canonicalPathOf(h1);
+    const std::wstring c2 = infrastructure::canonicalPathOf(h2);
+    CloseHandle(h1);
+    CloseHandle(h2);
+    RemoveDirectoryW(dir.c_str());
+
+    ASSERT_FALSE(c1.empty());
+    EXPECT_EQ(c1, c2);
+}
+
 TEST(ScanCore, NormalizeScanRoot) {
     EXPECT_EQ(infrastructure::normalizeScanRoot("src"), "src");
     EXPECT_EQ(infrastructure::normalizeScanRoot("src\\"), "src");

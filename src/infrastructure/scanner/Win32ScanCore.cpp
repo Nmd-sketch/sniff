@@ -114,6 +114,17 @@ std::vector<std::string> executableExtensions() {
     return result;
 }
 
+std::wstring canonicalPathOf(HANDLE handle) {
+    if (handle == INVALID_HANDLE_VALUE) return {};
+    DWORD len = GetFinalPathNameByHandleW(handle, nullptr, 0, FILE_NAME_NORMALIZED);
+    if (len == 0) return {};
+    std::wstring buffer(static_cast<std::size_t>(len), L'\0');
+    DWORD written = GetFinalPathNameByHandleW(handle, buffer.data(), len, FILE_NAME_NORMALIZED);
+    if (written == 0 || written >= len) return {};
+    buffer.resize(static_cast<std::size_t>(written));
+    return buffer;
+}
+
 bool hasExecutableExtension(const std::string& lowerExtension,
                             const std::vector<std::string>& extensions) {
     if (lowerExtension.empty()) return false;

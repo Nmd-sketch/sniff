@@ -54,18 +54,13 @@ void Win32Scanner::scan(const std::vector<std::string>& paths,
                                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
                                OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
         if (h == INVALID_HANDLE_VALUE) return true;
-        DWORD len = GetFinalPathNameByHandleW(h, nullptr, 0, FILE_NAME_NORMALIZED);
-        std::wstring canonical;
-        if (len > 0) {
-            canonical.resize(len);
-            GetFinalPathNameByHandleW(h, &canonical[0], len, FILE_NAME_NORMALIZED);
-        }
+        const std::wstring canonical = canonicalPathOf(h);
         CloseHandle(h);
         if (canonical.empty()) return true;
         for (const auto& existing : visited) {
             if (existing == canonical) return false;
         }
-        visited.push_back(std::move(canonical));
+        visited.push_back(canonical);
         return true;
     };
 
