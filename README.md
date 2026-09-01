@@ -13,7 +13,7 @@ real, tested, and wired together.
 
 - **Working MVP** — `sniff.exe` searches real directories with filters, formats, and
   Ctrl+C cancellation.
-- **180 unit + integration tests** (GoogleTest), clean `/W4 /WX` build.
+- **190 unit + integration tests** (GoogleTest), clean `/W4 /WX` build.
 - See `docs/design/DECISIONS.md` for the architectural decisions behind the project, and
   [Known limitations](#known-limitations) below.
 
@@ -29,11 +29,50 @@ real, tested, and wired together.
 cmake -S . -B build          # configure (MSVC: /W4 /WX, UTF-8)
 cmake --build build          # build
 build\Debug\sniff.exe        # the binary
-ctest --test-dir build       # run the 180 tests
+ctest --test-dir build       # run the 190 tests
 ```
 
 GoogleTest is downloaded by CMake `FetchContent` into `build/_deps/` (gitignored) and
 cached after the first configure.
+
+## Performance
+
+`sniff` is benchmarked against `fd 10.4.2` with `hyperfine 1.20.0` on this
+machine: *11th Gen Intel Core i3-1125G4, 4 cores / 8 threads, Windows 10,
+NTFS*. Both binaries are scanned over one identical corpus — the project's
+source tree replicated into 64 modules, 5,315 files / 1,600 directories
+(between 6 KB and 40 KB per file) — with each command returning exactly the
+same result set. 10 runs after 3 warm-ups, stdout discarded so console
+rendering is not measured.
+
+| Scenario | sniff (0.1.0) | fd (10.4.2) | Ratio |
+|---|---|---|---|
+| List every name (`sniff '*' -g` / `fd .`) | 112.0 ± 3.4 ms | 86.4 ± 3.5 ms | fd 1.30× |
+| All `.cpp` files (`--extension cpp` / `-e cpp`) | 105.0 ± 2.8 ms | 89.4 ± 5.8 ms | fd 1.17× |
+| Literal `cmake`, case-insensitive (`-F -i`) | 97.9 ± 6.9 ms | 91.8 ± 5.7 ms | fd 1.07× |
+
+Raw hyperfine output (mean ± σ, min, max, relative):
+
+```text
+| Command | Mean [ms] | Min [ms] | Max [ms] | Relative |
+|:---|---:|---:|---:|---:|
+| sniff '*' <corpus> -g                         | 112.0 ± 3.4 | 108.9 | 118.5 | 1.30 ± 0.07 |
+| fd --no-ignore -I . <corpus>              |  86.4 ± 3.5 |  82.0 |  92.1 | 1.00 |
+| sniff '*' <corpus> -g --extension cpp     | 105.0 ± 2.8 | 102.2 | 111.9 | 1.21 ± 0.06 |
+| fd --no-ignore -e cpp . <corpus>          |  89.4 ± 5.8 |  82.6 | 100.4 | 1.03 ± 0.08 |
+| sniff cmake <corpus> -F -i                |  97.9 ± 6.9 |  88.4 | 108.8 | 1.13 ± 0.09 |
+| fd --no-ignore -F -i cmake <corpus>       |  91.8 ± 5.7 |  84.4 | 100.0 | 1.06 ± 0.08 |
+```
+
+Methodology notes:
+
+- Sniff is a **Release** build (`/O2`); both tools scan the exact same files.
+- fd always excludes git plumbing files (`.gitkeep`, `.gitignore`) even with
+  `--no-ignore --hidden`, so those placeholders are left out of the corpus and
+  fd is given `--no-ignore -I` to neutralize its ignore/hidden defaults. Every
+  pair returns the same number of results.
+- Commands run through `cmd /c "… > NUL"` so the search work, not terminal
+  output, is timed.
 
 ## Usage
 

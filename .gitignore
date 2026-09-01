@@ -3,6 +3,11 @@
 # ==========================================
 # The default folder name used by most CMake users
 build/
+# Release build used by scripts/bench.ps1
+build-release/
+
+# Local benchmark tooling
+scripts/
 # Alternative names CMake sometimes generates
 cmake-build-*/
 out/
