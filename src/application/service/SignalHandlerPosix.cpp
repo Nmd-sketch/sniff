@@ -5,8 +5,9 @@
 namespace {
 
 void onInterrupt(int) {
-    if (application::signal_handler_detail::s_active_token != nullptr) {
-        application::signal_handler_detail::s_active_token->requestStop();
+    if (auto* token = application::signal_handler_detail::s_active_token.load();
+        token != nullptr) {
+        token->requestStop();
     }
 }
 
@@ -15,7 +16,7 @@ void onInterrupt(int) {
 namespace application {
 namespace signal_handler_detail {
 
-domain::CancellationToken* s_active_token = nullptr;
+std::atomic<domain::CancellationToken*> s_active_token = nullptr;
 
 }  // namespace signal_handler_detail
 }  // namespace application
