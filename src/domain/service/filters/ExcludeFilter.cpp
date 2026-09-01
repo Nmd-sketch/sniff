@@ -14,6 +14,17 @@ std::string lower(std::string text) {
     return text;
 }
 
+/* Case-insensitive substring search without a lower-cased copy of the path
+   (the old lower(path) allocated one for every scanned entry). */
+bool containsCaseInsensitive(const std::string& text, const std::string& pattern) {
+    if (pattern.empty()) return true;
+    return std::search(text.begin(), text.end(), pattern.begin(), pattern.end(),
+                       [](char lhs, char rhs) {
+                           return std::tolower(static_cast<unsigned char>(lhs)) ==
+                                  std::tolower(static_cast<unsigned char>(rhs));
+                       }) != text.end();
+}
+
 }  // namespace
 
 ExcludeFilter::ExcludeFilter(std::vector<std::string> patterns)
@@ -25,9 +36,9 @@ ExcludeFilter::ExcludeFilter(std::vector<std::string> patterns)
 
 bool ExcludeFilter::matches(const IEntry& entry, int depth) const {
     (void)depth;
-    const std::string path = lower(entry.getPath());
+    const std::string& path = entry.getPath();
     for (const auto& pattern : m_patterns) {
-        if (path.find(pattern) != std::string::npos) {
+        if (containsCaseInsensitive(path, pattern)) {
             return false;
         }
     }

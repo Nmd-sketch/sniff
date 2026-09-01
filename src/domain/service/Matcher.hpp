@@ -21,7 +21,8 @@ private:
     const MatchMode m_mode;
     const CaseMode m_caseMode;
     const std::string m_pattern;
-    mutable std::regex m_regex;
+    const std::string m_patternLower;
+    std::regex m_regex;
 };
 
 }  // namespace domain
