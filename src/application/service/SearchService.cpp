@@ -14,6 +14,9 @@ namespace {
 constexpr std::size_t PROGRESS_ENTRY_THRESHOLD = 1024;
 constexpr auto PROGRESS_TIME_THRESHOLD = std::chrono::milliseconds(50);
 
+/* This function reports the progress of the current scan, maybe for
+ * a loading bar on a gui or in the CLI itself, might delete it later,
+ * who knows. */
 void reportProgress(const std::optional<ProgressCallback>& callback,
                     std::uint64_t scanned,
                     const std::string& currentPath,

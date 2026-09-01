@@ -51,6 +51,7 @@ std::string wideToUtf8(const std::wstring& text) {
     return result;
 }
 
+/* Converts \\ to / in the path (normalization) */
 std::string normalizeScanRoot(const std::string& root) {
     std::string normalized;
     normalized.reserve(root.size());
@@ -88,6 +89,7 @@ std::string fileExtension(const std::string& name) {
 }
 
 std::vector<std::string> executableExtensions() {
+	// Predefined list of executables
     std::vector<std::string> result = {".exe", ".com", ".bat", ".cmd", ".ps1", ".msi", ".scr"};
     char* pathext = nullptr;
     if (_dupenv_s(&pathext, nullptr, "PATHEXT") == 0 && pathext != nullptr) {
@@ -114,6 +116,7 @@ std::vector<std::string> executableExtensions() {
     return result;
 }
 
+/* Extracts the path out of a handle */
 std::wstring canonicalPathOf(HANDLE handle) {
     if (handle == INVALID_HANDLE_VALUE) return {};
     DWORD len = GetFinalPathNameByHandleW(handle, nullptr, 0, FILE_NAME_NORMALIZED);
@@ -125,6 +128,7 @@ std::wstring canonicalPathOf(HANDLE handle) {
     return buffer;
 }
 
+/* Checks if the extension of a file is on our list of extensions */
 bool hasExecutableExtension(const std::string& lowerExtension,
                             const std::vector<std::string>& extensions) {
     if (lowerExtension.empty()) return false;

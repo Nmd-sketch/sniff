@@ -1,7 +1,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#ifdef _WIN32 
+#ifdef _WIN32
     #include <windows.h>
 #endif
 #include "application/service/SearchService.hpp"
@@ -42,10 +42,12 @@ static std::string WideToUTF8(const std::wstring& wstr) {
 static std::vector<std::string> parse_cmd() {
     int arg_num = 0;
     std::vector<std::string> results;
-LPWSTR* l = CommandLineToArgvW(GetCommandLineW(), &arg_num);
+    LPWSTR* l = CommandLineToArgvW(GetCommandLineW(), &arg_num);
+
     for (int i = 1; i < arg_num; ++i) {
         results.push_back(WideToUTF8(l[i]));
     }
+
     LocalFree(l);
     return results;
 }

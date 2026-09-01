@@ -7,58 +7,56 @@
 #include "IEntry.hpp"
 
 namespace domain {
+	class DomainEntry : public IEntry {
+	public:
+	    DomainEntry(EntryType type, bool hidden, bool executable, std::string name,
+	                std::string path, std::uintmax_t sizeBytes,
+	                std::chrono::system_clock::time_point createdAt,
+	                std::chrono::system_clock::time_point modifiedAt)
+	        : m_type(type), m_isHidden(hidden), m_isExecutable(executable),
+	          m_name(std::move(name)), m_path(std::move(path)), m_sizeBytes(sizeBytes),
+	          m_createdAt(createdAt), m_modifiedAt(modifiedAt) {}
 
-class DomainEntry : public IEntry {
-public:
-    DomainEntry(EntryType type, bool hidden, bool executable, std::string name,
-                std::string path, std::uintmax_t sizeBytes,
-                std::chrono::system_clock::time_point createdAt,
-                std::chrono::system_clock::time_point modifiedAt)
-        : m_type(type), m_isHidden(hidden), m_isExecutable(executable),
-          m_name(std::move(name)), m_path(std::move(path)), m_sizeBytes(sizeBytes),
-          m_createdAt(createdAt), m_modifiedAt(modifiedAt) {}
+	    const std::string& getName() const override {
+	        return m_name;
+	    }
 
-    const std::string& getName() const override {
-        return m_name;
-    }
+	    const std::string& getPath() const override {
+	        return m_path;
+	    }
 
-    const std::string& getPath() const override {
-        return m_path;
-    }
+	    EntryType getType() const override {
+	        return m_type;
+	    }
 
-    EntryType getType() const override {
-        return m_type;
-    }
+	    bool isHidden() const override {
+	        return m_isHidden;
+	    }
 
-    bool isHidden() const override {
-        return m_isHidden;
-    }
+	    bool isExecutable() const override {
+	        return m_isExecutable;
+	    }
 
-    bool isExecutable() const override {
-        return m_isExecutable;
-    }
+	    std::uintmax_t getSizeBytes() const override {
+	        return m_sizeBytes;
+	    }
 
-    std::uintmax_t getSizeBytes() const override {
-        return m_sizeBytes;
-    }
+	    const std::chrono::system_clock::time_point& getCreatedAt() const override {
+	        return m_createdAt;
+	    }
 
-    const std::chrono::system_clock::time_point& getCreatedAt() const override {
-        return m_createdAt;
-    }
+	    const std::chrono::system_clock::time_point& getModifiedAt() const override {
+	        return m_modifiedAt;
+	    }
 
-    const std::chrono::system_clock::time_point& getModifiedAt() const override {
-        return m_modifiedAt;
-    }
-
-private:
-    const EntryType m_type;
-    const bool m_isHidden;
-    const bool m_isExecutable;
-    const std::string m_name;
-    const std::string m_path;
-    const std::uintmax_t m_sizeBytes;
-    const std::chrono::system_clock::time_point m_createdAt;
-    const std::chrono::system_clock::time_point m_modifiedAt;
-};
-
+	private:
+	    const EntryType m_type;
+	    const bool m_isHidden;
+	    const bool m_isExecutable;
+	    const std::string m_name;
+	    const std::string m_path;
+	    const std::uintmax_t m_sizeBytes;
+	    const std::chrono::system_clock::time_point m_createdAt;
+	    const std::chrono::system_clock::time_point m_modifiedAt;
+	};
 }  // namespace domain
