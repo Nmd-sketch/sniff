@@ -133,7 +133,7 @@ void Win32Scanner::scan(const std::vector<std::string>& paths,
         if (token.isStopped()) return;
 
         /* The first path will always be the root, so we get it's attributes */
-        const std::wstring widePath = utf8ToWide(path);
+        const std::wstring widePath = longPathOf(utf8ToWide(path));
         const DWORD rootAttrs = GetFileAttributesW(widePath.c_str());
         if (rootAttrs == INVALID_FILE_ATTRIBUTES) { // Throw if the dir doesn't exists
             throw std::runtime_error(path + ": No such file or directory");

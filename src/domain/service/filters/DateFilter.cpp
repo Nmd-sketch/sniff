@@ -1,6 +1,7 @@
 #include "DateFilter.hpp"
 
 #include <cctype>
+#include <limits>
 #include <stdexcept>
 
 namespace domain {
@@ -19,6 +20,7 @@ std::optional<std::chrono::seconds> parseDuration(const std::string& value,
                                     "' (expected a duration like 90s, 5m, 2h, 1d or 3w)");
     }
     long long amount = 0;
+
     try {
         amount = std::stoll(value.substr(0, pos));
     } catch (const std::exception&) {
@@ -27,18 +29,34 @@ std::optional<std::chrono::seconds> parseDuration(const std::string& value,
     }
 
     const std::string unit = value.substr(pos);
-    long long seconds = 0;
-    if (unit == "s") seconds = amount;
-    else if (unit == "m") seconds = amount * 60;
-    else if (unit == "h") seconds = amount * 3600;
-    else if (unit == "d") seconds = amount * 86400;
-    else if (unit == "w") seconds = amount * 604800;
+    long long factor = 0;
+    if (unit == "s") factor = 1;
+    else if (unit == "m") factor = 60;
+    else if (unit == "h") factor = 3600;
+    else if (unit == "d") factor = 86400;
+    else if (unit == "w") factor = 604800;
     else {
         throw std::invalid_argument(std::string("invalid ") + option + " unit '" +
                                     unit + "' in '" + value +
                                     "' (expected s, m, h, d or w)");
     }
-    return std::chrono::seconds(seconds);
+    if (amount > 0 && factor > std::numeric_limits<long long>::max() / amount) {
+        throw std::invalid_argument(std::string("invalid ") + option + " value '" +
+                                    value + "' (duration is too large)");
+    }
+
+    /* Cap the duration so "now - duration" can never overflow the clock's
+       representation: duration_cast of the max rep keeps the product below
+       rep::max, and now is always non-negative. */
+    const long long maxSeconds =
+        std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::duration::max())
+            .count();
+    if (amount * factor > maxSeconds) {
+        throw std::invalid_argument(std::string("invalid ") + option + " value '" +
+                                    value + "' (duration is too large)");
+    }
+    return std::chrono::seconds(amount * factor);
 }
 
 int parseInt(const std::string& value, std::size_t& pos, std::size_t digits,
