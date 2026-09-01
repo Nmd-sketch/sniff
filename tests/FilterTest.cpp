@@ -159,6 +159,17 @@ TEST(DateFilter, InvalidValuesThrow) {
                  std::invalid_argument);
 }
 
+TEST(DateFilter, HugeDurationThrowsInsteadOfOverflowing) {
+    /* Previously "now - duration" could overflow the clock rep (UB); a huge
+       duration must now be rejected up front with a clean error. */
+    EXPECT_THROW(domain::DateFilter(std::string("999999999999999999w"), std::nullopt,
+                                    std::nullopt, std::nullopt),
+                 std::invalid_argument);
+    EXPECT_THROW(domain::DateFilter(std::nullopt, std::nullopt,
+                                    std::string("999999999999999999w"), std::nullopt),
+                 std::invalid_argument);
+}
+
 TEST(TypeFilter, MatchesFileTypes) {
     const domain::TypeFilter filter({FileType::FILE, FileType::DIRECTORY});
     EXPECT_TRUE(filter.matches(makeEntry({.type = domain::EntryType::FILE}), 0));

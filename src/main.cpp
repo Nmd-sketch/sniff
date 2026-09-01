@@ -43,6 +43,9 @@ static std::vector<std::string> parse_cmd() {
     int arg_num = 0;
     std::vector<std::string> results;
     LPWSTR* l = CommandLineToArgvW(GetCommandLineW(), &arg_num);
+    if (l == nullptr) {
+    	return {};
+    }
 
     for (int i = 1; i < arg_num; ++i) {
         results.push_back(WideToUTF8(l[i]));
@@ -55,6 +58,9 @@ static std::vector<std::string> parse_cmd() {
 
 int main() {
     std::vector<std::string> args = parse_cmd();
+    if (args.empty()) {
+    	throw std::runtime_error("Error parsing the command line arguments!");
+    }
 
     infrastructure::Win32Scanner scanner;
     application::SearchService service(scanner);

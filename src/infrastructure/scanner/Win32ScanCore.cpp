@@ -128,6 +128,39 @@ std::wstring canonicalPathOf(HANDLE handle) {
     return buffer;
 }
 
+/* Returns a path rewritten with the "\\?\" extended-length prefix, so the Win32
+   API can address paths longer than 260 characters. Applied unconditionally so a
+   traversal rooted at the result stays addressable at every depth. */
+std::wstring longPathOf(const std::wstring& path) {
+    if (path.empty()) return path;
+
+    /* Already in extended-length form, nothing to do. */
+    if (path.size() >= 4 && path[0] == L'\\' && path[1] == L'\\' && path[2] == L'?' &&
+        path[3] == L'\\') {
+        return path;
+    }
+
+    /* Extended-length paths must be absolute; resolve relative roots against the
+       current working directory. GetFullPathNameW also handles drive roots. */
+    std::wstring absolute = path;
+    DWORD len = GetFullPathNameW(path.c_str(), 0, nullptr, nullptr);
+    if (len > 0) {
+        std::wstring full(static_cast<std::size_t>(len), L'\0');
+        DWORD written = GetFullPathNameW(path.c_str(), len, full.data(), nullptr);
+        if (written > 0 && written < len) {
+            full.resize(static_cast<std::size_t>(written));
+            absolute = full;
+        }
+    }
+
+    /* UNC paths use the "\\?\UNC\" form. */
+    if (absolute.size() >= 2 && absolute[0] == L'\\' && absolute[1] == L'\\') {
+        return L"\\\\?\\UNC\\" + absolute.substr(2);
+    }
+
+    return L"\\\\?\\" + absolute;
+}
+
 /* Checks if the extension of a file is on our list of extensions */
 bool hasExecutableExtension(const std::string& lowerExtension,
                             const std::vector<std::string>& extensions) {

@@ -33,6 +33,14 @@ std::string wideToUtf8(const std::wstring& text);
    is trimmed. */
 std::wstring canonicalPathOf(HANDLE handle);
 
+/* Returns the extended-length "\\?\" form of a path so the Win32 file APIs can
+   address paths longer than 260 characters. The prefix is applied unconditionally:
+   a traversal rooted at an extended path inherits the prefix for every descendant
+   built by string concatenation, so deep subtrees of an otherwise-short root stay
+   addressable. Relative paths are resolved to absolute first (extended paths must
+   be absolute) and UNC paths are re-prefixed as "\\?\UNC\..". */
+std::wstring longPathOf(const std::wstring& path);
+
 /* Normalize a scan root: backslashes to '/', strip trailing '/', '.' -> "", strip a leading "./". */
 std::string normalizeScanRoot(const std::string& root);
 

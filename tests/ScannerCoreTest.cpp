@@ -129,6 +129,41 @@ TEST(ScanCore, CanonicalPathOfIsDeterministic) {
     EXPECT_EQ(c1, c2);
 }
 
+TEST(ScanCore, LongPathPrefixesShortDrivePath) {
+    EXPECT_EQ(infrastructure::longPathOf(L"C:\\foo\\bar"), L"\\\\?\\C:\\foo\\bar");
+    EXPECT_EQ(infrastructure::longPathOf(L"C:/foo/bar"), L"\\\\?\\C:\\foo\\bar");
+}
+
+TEST(ScanCore, LongPathEmptyIsEmpty) {
+    EXPECT_EQ(infrastructure::longPathOf(L""), L"");
+}
+
+TEST(ScanCore, LongPathPrefixesAbsoluteDrivePath) {
+    const std::wstring longPath(L"C:\\" + std::wstring(300, L'a'));
+    const std::wstring prefixed = infrastructure::longPathOf(longPath);
+    EXPECT_EQ(prefixed, L"\\\\?\\" + longPath);
+}
+
+TEST(ScanCore, LongPathDoesNotDoublePrefix) {
+    const std::wstring longPath(L"C:\\" + std::wstring(300, L'a'));
+    const std::wstring once = infrastructure::longPathOf(longPath);
+    EXPECT_EQ(infrastructure::longPathOf(once), once);
+}
+
+TEST(ScanCore, LongPathResolvesRelativeToAbsoluteAndPrefixes) {
+    const std::wstring relative(L"rel\\" + std::wstring(300, L'b'));
+    const std::wstring prefixed = infrastructure::longPathOf(relative);
+    EXPECT_EQ(prefixed.rfind(L"\\\\?\\", 0), 0u);
+    EXPECT_NE(prefixed.find(L"rel\\" + std::wstring(300, L'b')), std::wstring::npos);
+    EXPECT_TRUE(prefixed.size() > relative.size());
+}
+
+TEST(ScanCore, LongPathUsesUncPrefixForUncPath) {
+    const std::wstring unc(L"\\\\server\\share\\" + std::wstring(300, L'c'));
+    const std::wstring prefixed = infrastructure::longPathOf(unc);
+    EXPECT_EQ(prefixed, L"\\\\?\\UNC\\server\\share\\" + std::wstring(300, L'c'));
+}
+
 TEST(ScanCore, NormalizeScanRoot) {
     EXPECT_EQ(infrastructure::normalizeScanRoot("src"), "src");
     EXPECT_EQ(infrastructure::normalizeScanRoot("src\\"), "src");
