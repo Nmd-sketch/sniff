@@ -63,10 +63,23 @@ std::string lower(std::string text) {
     return text;
 }
 
+/* Case-insensitive substring search that never materializes a lower-cased copy
+   of the text (the old lower(text).find(pattern) allocated one per entry). */
+bool containsCaseInsensitive(const std::string& text, const std::string& pattern) {
+    if (pattern.empty()) return true;
+    return std::search(text.begin(), text.end(), pattern.begin(), pattern.end(),
+                       [](char lhs, char rhs) {
+                           return std::tolower(static_cast<unsigned char>(lhs)) ==
+                                  std::tolower(static_cast<unsigned char>(rhs));
+                       }) != text.end();
+}
+
 }  // namespace
 
 Matcher::Matcher(std::string pattern, MatchMode mode, CaseMode caseMode)
     : m_mode(mode), m_caseMode(caseMode), m_pattern(std::move(pattern)),
+      m_patternLower(m_caseMode == CaseMode::INSENSITIVE ? lower(m_pattern)
+                                                         : std::string()),
       m_regex(buildRegex(m_pattern, m_mode, m_caseMode)) {}
 
 std::regex Matcher::buildRegex(const std::string& pattern, MatchMode mode,
@@ -96,7 +109,7 @@ std::regex Matcher::buildRegex(const std::string& pattern, MatchMode mode,
 bool Matcher::matches(const std::string& text) const {
     if (m_mode == MatchMode::FIXED) {
         if (m_caseMode == CaseMode::INSENSITIVE) {
-            return lower(text).find(lower(m_pattern)) != std::string::npos;
+            return containsCaseInsensitive(text, m_patternLower);
         }
         return text.find(m_pattern) != std::string::npos;
     }

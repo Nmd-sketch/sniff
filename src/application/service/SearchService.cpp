@@ -21,9 +21,9 @@ void reportProgress(const std::optional<ProgressCallback>& callback,
                     std::uint64_t scanned,
                     const std::string& currentPath,
                     std::uint64_t& lastReported,
-                    std::chrono::steady_clock::time_point& lastReportTime,
-                    std::chrono::steady_clock::time_point now) {
+                    std::chrono::steady_clock::time_point& lastReportTime) {
     if (!callback) return;
+    const auto now = std::chrono::steady_clock::now();
     if (scanned - lastReported < PROGRESS_ENTRY_THRESHOLD &&
         now - lastReportTime < PROGRESS_TIME_THRESHOLD) {
         return;
@@ -63,8 +63,7 @@ QueryResult SearchService::search(const ScanConfig& config,
 
                 ++stats.scanned;
                 reportProgress(config.on_progress, stats.scanned, entry->getPath(),
-                               lastReported, lastReportTime,
-                               std::chrono::steady_clock::now());
+                               lastReported, lastReportTime);
 
                 if (!chain.matches(*entry, depth)) return true;
 
