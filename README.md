@@ -46,6 +46,9 @@ sniff <pattern> [paths…] [options]
 - Patterns are **regular expressions by default**, matched unanchored against the file
   name (`std::regex`). Use `--glob` for shell-style globs or `--fixed-strings` for a
   literal substring.
+- In **glob mode** `.` is a literal dot and `*` matches any characters; to match
+  everything use `'*'`. A pattern like `'*.cpp'` already finds `.cpp` files anywhere
+  in the tree, so no leading `.*` is needed.
 - Files **and** directories are matched and reported.
 
 > **PowerShell note:** quote patterns so the shell doesn't expand them first:
@@ -58,16 +61,16 @@ sniff '\.cpp$' .                  # regex: every .cpp under the current dir
 sniff '*.cpp' . -g                # glob version
 sniff 'Config\.h$' src --glob     # search only inside src/
 sniff cpp . -F                    # literal substring "cpp" anywhere in a name
-sniff '.*' . -g --extension cpp   # only .cpp files, anywhere in the tree
-sniff '.*' . -g --type d          # only directories
-sniff '.*' . -g --max-depth 2     # two levels deep
-sniff '.*' . -g --size +10k       # files larger than 10 KB
-sniff '.*' . -g -S -1m            # files smaller than 1 MB
-sniff '.*' . -g --changed-within 2d    # modified in the last 2 days
-sniff '.*' . -g --changed-before '2026-01-01 00:00:00'  # modified before a date
-sniff '.*' . -g --hidden -i       # include dot-files, case-insensitive
-sniff '.*' . -g --format tree     # render as a tree
-sniff '.*' . -g --format json     # machine-readable JSON
+sniff '*' . -g --extension cpp   # only .cpp files, anywhere in the tree
+sniff '*' . -g --type d          # only directories
+sniff '*' . -g --max-depth 2     # two levels deep
+sniff '*' . -g --size +10k       # files larger than 10 KB
+sniff '*' . -g -S -1m            # files smaller than 1 MB
+sniff '*' . -g --changed-within 2d    # modified in the last 2 days
+sniff '*' . -g --changed-before '2026-01-01 00:00:00'  # modified before a date
+sniff '*' . -g --hidden -i       # include dot-files, case-insensitive
+sniff '*' . -g --format tree     # render as a tree
+sniff '*' . -g --format json     # machine-readable JSON
 ```
 
 ### Options
